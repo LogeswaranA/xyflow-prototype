@@ -1,0 +1,24 @@
+[
+  {
+    "name": "search_web",
+    "description": "Search the web for a given query.",
+    "parameters": [
+      { "name": "query", "label": "Search Query", "type": "text" }
+    ]
+  },
+  {
+    "name": "summarize_text",
+    "description": "Summarize the provided text.",
+    "parameters": [
+      { "name": "text", "label": "Text to Summarize", "type": "textarea" }
+    ]
+  },
+  {
+    "name": "generate_text",
+    "description": "Generate text based on a prompt.",
+    "parameters": [
+      { "name": "prompt", "label": "Prompt", "type": "text" },
+      { "name": "apiKey", "label": "API Key", "type": "text" }
+    ]
+  }
+]

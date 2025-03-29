@@ -1,0 +1,72 @@
+{
+  "workflow1": {
+    "nodes": [
+      {
+        "id": "1743218780202-oubzh9jeh",
+        "type": "default",
+        "data": {
+          "label": "input_query_tool",
+          "parameters": {}
+        },
+        "position": {
+          "x": 3.50518798828125,
+          "y": -86.03125
+        },
+        "measured": {
+          "width": 150,
+          "height": 34
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "1743218783534-uxaxc4yii",
+        "type": "default",
+        "data": {
+          "label": "llm_tool",
+          "parameters": {}
+        },
+        "position": {
+          "x": 72.00778198242188,
+          "y": -22.296875
+        },
+        "measured": {
+          "width": 150,
+          "height": 34
+        },
+        "selected": true,
+        "dragging": false
+      },
+      {
+        "id": "1743218786885-hhah9qswu",
+        "type": "default",
+        "data": {
+          "label": "output_report_tool",
+          "parameters": {}
+        },
+        "position": {
+          "x": -7.2409210205078125,
+          "y": 43.5703125
+        },
+        "measured": {
+          "width": 150,
+          "height": 34
+        },
+        "selected": false,
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "source": "1743218780202-oubzh9jeh",
+        "target": "1743218783534-uxaxc4yii",
+        "id": "xy-edge__1743218780202-oubzh9jeh-1743218783534-uxaxc4yii"
+      },
+      {
+        "source": "1743218783534-uxaxc4yii",
+        "target": "1743218786885-hhah9qswu",
+        "id": "xy-edge__1743218783534-uxaxc4yii-1743218786885-hhah9qswu"
+      }
+    ]
+  }
+}
