@@ -12,9 +12,9 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import axios from 'axios';
-import io from 'socket.io-client';
+import { io } from 'socket.io-client';
 
-// Connect to the WebSocket server
+// Connect to the SocketIO server
 const socket = io('http://localhost:5000');
 
 const FlowCanvas = ({ tools }) => {
@@ -36,14 +36,13 @@ const FlowCanvas = ({ tools }) => {
     return acc;
   }, {});
 
-  // Listen for WebSocket events
+  // Listen for SocketIO events
   useEffect(() => {
     socket.on('node_processing', ({ nodeId, status }) => {
-      console.log(`Received node_processing event: nodeId=${nodeId}, status=${status}`);
+      console.log(`Node ${nodeId} status: ${status}`);
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
-            console.log(`Updating status for node ${nodeId} to ${status}`);
             return {
               ...node,
               style: {
@@ -58,9 +57,8 @@ const FlowCanvas = ({ tools }) => {
     });
 
     socket.on('execution_complete', ({ result }) => {
-      console.log('Execution complete with result:', result);
+      console.log('Execution complete:', result);
       setResult(result);
-      // Reset all node styles after execution
       setNodes((nds) =>
         nds.map((node) => ({
           ...node,
@@ -127,37 +125,8 @@ const FlowCanvas = ({ tools }) => {
     setShowModal(true);
   };
 
-  // Handle parameter form submission with validation
-  const validateRequiredFields = (params, toolName) => {
-    if (toolName === 'llm_tool') {
-      if (!params['apiKey']) {
-        alert('API Key is required for llm_tool');
-        return false;
-      }
-    }
-    if (toolName === 'fetch_from_rest_api_tool') {
-      const headers = params['headers'] || '{}';
-      const body = params['body'] || '{}';
-      try {
-        JSON.parse(headers);
-      } catch (e) {
-        alert('Invalid JSON in headers: ' + e.message);
-        return false;
-      }
-      try {
-        JSON.parse(body);
-      } catch (e) {
-        alert('Invalid JSON in body: ' + e.message);
-        return false;
-      }
-    }
-    return true;
-  };
-
+  // Handle parameter form submission
   const handleParamSubmit = () => {
-    if (!validateRequiredFields(nodeParams, selectedNode.data.label)) {
-      return;
-    }
     setNodes((nds) =>
       nds.map((node) =>
         node.id === selectedNode.id
@@ -186,6 +155,7 @@ const FlowCanvas = ({ tools }) => {
       alert(response.data.message);
     } catch (error) {
       console.error('Error saving workflow:', error);
+      alert('Failed to save workflow');
     }
   };
 
@@ -193,7 +163,6 @@ const FlowCanvas = ({ tools }) => {
   const executeWorkflow = async () => {
     try {
       setResult(''); // Clear previous result
-      // Reset all node styles before execution
       setNodes((nds) =>
         nds.map((node) => ({
           ...node,
@@ -206,6 +175,7 @@ const FlowCanvas = ({ tools }) => {
       });
     } catch (error) {
       console.error('Error executing workflow:', error);
+      setResult('Error executing workflow');
     }
   };
 
@@ -213,7 +183,8 @@ const FlowCanvas = ({ tools }) => {
   const reactFlowKey = nodes.map((n) => `${n.id}-${n.style?.backgroundColor || 'default'}`).join('-');
 
   return (
-    <div style={{ height: '100vh', display: 'flex' }}>
+    <div style={{ flex: 1, display: 'flex' }}>
+      {/* Sidebar with tools and controls */}
       <div style={{ width: '250px', padding: '20px', background: '#f0f0f0', overflowY: 'auto' }}>
         <h3>Available Tools</h3>
         {tools.length === 0 ? (
@@ -251,6 +222,7 @@ const FlowCanvas = ({ tools }) => {
             border: 'none',
             borderRadius: '4px',
             marginTop: '20px',
+            cursor: 'pointer',
           }}
         >
           Save Workflow
@@ -272,6 +244,7 @@ const FlowCanvas = ({ tools }) => {
               color: 'white',
               border: 'none',
               borderRadius: '4px',
+              cursor: 'pointer',
             }}
           >
             Execute
@@ -283,6 +256,8 @@ const FlowCanvas = ({ tools }) => {
           )}
         </div>
       </div>
+
+      {/* React Flow canvas */}
       <div style={{ flex: 1 }} ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodes}
@@ -294,14 +269,14 @@ const FlowCanvas = ({ tools }) => {
           onDrop={onDrop}
           onNodeClick={onNodeClick}
           fitView
-          key={reactFlowKey} // Force re-render when node styles change
+          key={reactFlowKey}
         >
           <Background />
           <Controls />
         </ReactFlow>
       </div>
 
-      {/* Parameter Modal */}
+      {/* Parameter configuration modal */}
       {showModal && selectedNode && (
         <div
           style={{
@@ -314,19 +289,20 @@ const FlowCanvas = ({ tools }) => {
             borderRadius: '8px',
             boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
             zIndex: 1000,
+            width: '400px',
           }}
         >
           <h3>Configure {selectedNode.data.label}</h3>
           {toolParameters[selectedNode.data.label]?.map((param) => (
-            <div key={param.name} style={{ marginBottom: '10px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>
+            <div key={param.name} style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 {param.label}
               </label>
               {param.type === 'textarea' ? (
                 <textarea
                   value={nodeParams[param.name] || ''}
                   onChange={(e) => handleParamChange(param.name, e.target.value)}
-                  style={{ width: '100%', padding: '5px' }}
+                  style={{ width: '100%', padding: '5px', resize: 'vertical' }}
                   rows="3"
                 />
               ) : (
@@ -335,6 +311,7 @@ const FlowCanvas = ({ tools }) => {
                   value={nodeParams[param.name] || ''}
                   onChange={(e) => handleParamChange(param.name, e.target.value)}
                   style={{ width: '100%', padding: '5px' }}
+                  placeholder={`Enter ${param.label}`}
                 />
               )}
             </div>
@@ -349,6 +326,7 @@ const FlowCanvas = ({ tools }) => {
                 border: 'none',
                 borderRadius: '4px',
                 marginRight: '10px',
+                cursor: 'pointer',
               }}
             >
               Cancel
@@ -361,6 +339,7 @@ const FlowCanvas = ({ tools }) => {
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
+                cursor: 'pointer',
               }}
             >
               Save
